@@ -1,3 +1,4 @@
+//config.h
 #ifndef CONFIG_H
 #define CONFIG_H
 
@@ -27,8 +28,8 @@ TFT_eSprite spr = TFT_eSprite(&tft);
 TFT_eSprite sprMenu = TFT_eSprite(&tft);
 
 // wifi, ntp & telegram
-const char *WIFI_SSID = "@@**@@**";
-const char *WIFI_PASS = "****";
+const char *WIFI_SSID = "Kos Arfad putra muslim 3 tengah";
+const char *WIFI_PASS = "BismillahAlhamdulillah3t";
 const long GMT_OFFSET_SEC = 7 * 3600;
 const int DAYLIGHT_OFFSET_SEC = 0;
 
@@ -45,22 +46,29 @@ const int DAYLIGHT_OFFSET_SEC = 0;
 #define COLOR_RED       0xF800 // #FF3D00
 #define COLOR_BLUE      0x2B5F // #2979FF
 
-// warna hmi (dark industrial)
+// warna ui dark
 #define HMI_BG_DARK     TFT_BLACK
-#define HMI_BG_CARD     0x18E3 
-#define HMI_BORDER      0x3186 
+#define HMI_BG_CARD     0x18E3 // abu-abu gelap
+#define HMI_BORDER      0x3186 // abu-abu border
 #define HMI_CYAN        TFT_CYAN
 #define HMI_GREEN       TFT_GREEN
 #define HMI_YELLOW      TFT_YELLOW
 #define HMI_RED         TFT_RED
 #define HMI_BLUE        TFT_BLUE
 #define HMI_TEXT_MAIN   TFT_WHITE
-#define HMI_TEXT_DIM    0x7BEF
+#define HMI_TEXT_DIM    0x7BEF  
 
-// warna hmi light theme
+// warna ui light theme
 #define HMI_BG_LIGHT     TFT_WHITE
-#define HMI_BG_CARD_L    0xE71C
+#define HMI_BG_CARD_L    0xE71C 
 #define HMI_TEXT_DARK    TFT_BLACK
+#define LT_BG_MAIN       0xF7BE // Krem sangat terang
+#define LT_BG_CARD       0xFFFF // Putih bersih
+#define LT_BORDER        0xC618 // Abu-abu lembut
+#define LT_ACCENT_ORG    0xFC00 // Oranye cerah 
+#define LT_ACCENT_BLU    0x2B5C // Biru dongker 
+#define LT_TEXT_MAIN     0x18E3 // Hitam keabu-abuan
+#define LT_TEXT_DIM      0x9492 // Abu-abu redup
 
 // pin sensor & sd card
 #define ADXL_SCK        6  
@@ -94,8 +102,8 @@ const int DAYLIGHT_OFFSET_SEC = 0;
 #define TG_HTTP_TIMEOUT_MS    10000
 #define ALERT_COOLDOWN_MS     300000
 
-#define TELEGRAM_BOT_TOKEN    "*******"
-#define TELEGRAM_CHAT_ID      "*******"
+#define TELEGRAM_BOT_TOKEN    "8605474806:AAF8x9JnDyjVXF58xeBYXIkS8aKboSyB6Ww"
+#define TELEGRAM_CHAT_ID      "-1003986831663"
 
 // parameter sistem & eeprom
 #define BOOT_DELAY_MS         8000UL
@@ -114,8 +122,8 @@ const int DAYLIGHT_OFFSET_SEC = 0;
 #define RUN_UP_IGNORE_MS       10000UL
 #define STAB_RMS_TOL           0.05f
 #define STAB_NEED_COUNT        3
-#define STD_DEV_RATIO_MAX_RMS  0.10f 
-#define STD_DEV_RATIO_MAX_SPEC 0.20f 
+#define STD_DEV_RATIO_MAX_RMS  0.50f //aslinya 0.10
+#define STD_DEV_RATIO_MAX_SPEC 0.50f //aslinya 0.10
 #define NOISE_FLOOR            0.10f
 
 // motor stop & smoothing
@@ -135,27 +143,6 @@ const int DAYLIGHT_OFFSET_SEC = 0;
 #define DANGER_2X_M            6.0f
 #define ALERT_3X_M             3.5f
 #define DANGER_3X_M            7.0f
-
-// --- DIAGNOSTIC MAGIC NUMBERS ---
-#define UB_SCORE_BASE         50.0f
-#define UB_RAD_AX_RATIO       1.5f
-#define UB_RAD_AX_ADD         30.0f
-#define UB_2X_RATIO           0.5f
-#define UB_3X_RATIO           0.3f
-#define UB_HARM_ADD           20.0f
-
-#define AM_BASE_ADD           40.0f
-#define AM_AX_RAD_RATIO       1.2f
-#define AM_AX_RAD_ADD         50.0f
-
-#define PM_BASE_ADD           40.0f
-#define PM_2X_RATIO           1.0f
-#define PM_2X_ADD             40.0f
-
-#define LO_BASE_ADD           20.0f
-#define LO_3X_RATIO           0.3f
-#define LO_MAX_ADD            80.0f
-#define LO_NORM_RATIO         0.6f
 
 // tabel iso & sd options
 struct ISOThresh {

@@ -59,6 +59,7 @@ enum UICmd : uint8_t {
   UI_CMD_NONE, 
   UI_CMD_SET_PARAMS, 
   UI_CMD_START_BOOT,
+  UI_CMD_START_CAPTURE, 
   UI_CMD_REBASELINE, 
   UI_CMD_TOGGLE_AXIS_MAP,
   UI_CMD_TOGGLE_MATLAB, 
@@ -68,7 +69,7 @@ enum UICmd : uint8_t {
   UI_CMD_SD_SET_AUTO, 
   UI_CMD_RESET_EEPROM,
   UI_CMD_FORCE_NTP,
-  UI_CMD_TOGGLE_THEME    // <- TAMBAHKAN INI
+  UI_CMD_TOGGLE_THEME 
 };
 
 enum BtnEvent { 
@@ -87,6 +88,7 @@ enum UIScreen : uint8_t {
   SCREEN_MENU_NETWORK
 };
 
+extern UIScreen currentScreen;
 
 enum NavMode { 
   NAV_BROWSE, 

@@ -52,8 +52,7 @@ void recalcThresholds() {
 
 void eepromSave() {
   EepromData d;
-  memset(&d, 0, sizeof(d)); // Bersihkan dulu baru diisi
-  
+  memset(&d, 0, sizeof(d));
   d.magic = EEPROM_MAGIC;
   d.motorRPM = motorRPM;
   d.isoClass = isoClass;
@@ -91,7 +90,7 @@ void eepromSave() {
   d.baselineValid = baselineValid;
   d.sdLogIntervalMs = sdLogIntervalMs;
   d.sdAutoLog = sdAutoLog;
-  d.currentThemeCfg = currentTheme; // <- POSISI YANG BENAR (setelah memset)
+  d.currentThemeCfg = currentTheme;
   
   d.crc = crc32((uint8_t *)&d, offsetof(EepromData, crc));
   
@@ -103,10 +102,10 @@ void eepromSave() {
 
 bool eepromLoad() {
   EepromData d;
-  EEPROM.get(0, d); // Ambil data dulu dari EEPROM
+  EEPROM.get(0, d); 
   
   if (d.magic != EEPROM_MAGIC || crc32((uint8_t *)&d, offsetof(EepromData, crc)) != d.crc) {
-    currentTheme = 0; // Default dark jika EEPROM kosong
+    currentTheme = 0; //1 1 untuk light jika eeprom kosong 
     return false;
   }
   
@@ -152,7 +151,7 @@ bool eepromLoad() {
   }
   
   sdAutoLog = d.sdAutoLog;
-  currentTheme = d.currentThemeCfg;
+  currentTheme = d.currentThemeCfg; 
   
   currentIntervalIdx = 0;
   

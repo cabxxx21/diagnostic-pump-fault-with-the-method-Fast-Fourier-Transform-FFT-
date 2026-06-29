@@ -1,6 +1,8 @@
+//task_fft.ino
 #include "globals.h"
 
-// helper frekuensi & mapping
+// === helper & mapping ===
+
 float freq1X() { return motorRPM / 60.0f; }
 float freq2X() { return 2.0f * freq1X(); }
 float freq3X() { return 3.0f * freq1X(); }
@@ -18,13 +20,13 @@ float movingAvg(float *arr, int len, int win) {
 
 float stdDev(float *arr, int len) {
   if (len < 2) return 999.0f;
-  float m = 0.0f, ss = 0.0f;
-  
+  float m = 0.0f;
   for (int i = 0; i < len; i++) {
     m += arr[i];
   }
   m /= len;
   
+  float ss = 0.0f;
   for (int i = 0; i < len; i++) {
     ss += sq(arr[i] - m);
   }
@@ -44,13 +46,9 @@ uint32_t crc32(const uint8_t *d, size_t n) {
 
 void applyAxisMap() {
   if (axisMapMode == 1) { 
-    mapX = ROLE_A; 
-    mapY = ROLE_V; 
-    mapZ = ROLE_H; 
+    mapX = ROLE_A; mapY = ROLE_V; mapZ = ROLE_H; 
   } else { 
-    mapX = ROLE_H; 
-    mapY = ROLE_A; 
-    mapZ = ROLE_V; 
+    mapX = ROLE_H; mapY = ROLE_A; mapZ = ROLE_V; 
   }
 }
 
@@ -65,9 +63,9 @@ float mapToAxial(float x, float y, float z) {
 }
 
 void forceLocalTime(int targetHour, int targetMin, int targetSec) {
-  time_t now; 
+  time_t now;
   time(&now);
-  struct tm currentLocalTm; 
+  struct tm currentLocalTm;
   localtime_r(&now, &currentLocalTm);
   
   long currentSecs = currentLocalTm.tm_hour * 3600 + currentLocalTm.tm_min * 60 + currentLocalTm.tm_sec;
@@ -81,7 +79,8 @@ void forceLocalTime(int targetHour, int targetMin, int targetSec) {
   settimeofday(&tv, NULL);
 }
 
-// akuisisi data sensor
+// === fft & akuisisi ===
+
 void startAcquisition() {
   sampleIdx = 0;
   acqSumX = 0; acqSumX2 = 0;
@@ -113,7 +112,7 @@ bool runAcquisition() {
     acqSumZ += az; 
     acqSumZ2 += az * az;
     
-    sampleIdx++; 
+    sampleIdx++;
     samplesRead++;
   }
   
@@ -125,27 +124,6 @@ bool runAcquisition() {
   return false;
 }
 
-// handler buat non-blocking RTOS akuisisi
-bool handleAcquisition() {
-  if (!isAcquiring) {
-    startAcquisition();
-  }
-  
-  if (isAcquiring && !acqComplete) { 
-    runAcquisition(); 
-    taskYIELD(); 
-  }
-  
-  if (acqComplete) {
-    processFFT(); 
-    isAcquiring = false;
-    return true;
-  }
-  
-  return false;
-}
-
-// proses fft
 float extractMag(double *vData, float targetFreq) {
   if (targetFreq < FREQ_RES || targetFreq >= SAMPLING_FREQ / 2.0f) return 0.0f;
   
@@ -156,7 +134,7 @@ float extractMag(double *vData, float targetFreq) {
   
   for (int i = lo; i <= hi; i++) {
     if ((float)vData[i] > peak) {
-        peak = (float)vData[i];
+      peak = (float)vData[i];
     }
   }
   return peak;
@@ -177,7 +155,7 @@ void runFFTOnAxis(double *vDataTarget) {
   pFFT->complexToMagnitude();
 
   for (int i = 0; i < SAMPLES / 2; i++) {
-      vDataTarget[i] *= FFT_NORM;
+    vDataTarget[i] *= FFT_NORM;
   }
 }
 
@@ -202,25 +180,25 @@ void processFFT() {
     return;
   }
 
-  runFFTOnAxis(vRealX); 
-  float x1 = extractMag(vRealX, freq1X()); 
-  float x2 = extractMag(vRealX, freq2X()); 
-  float x3 = extractMag(vRealX, freq3X()); 
-  float x4 = extractMag(vRealX, freq4X()); 
+  runFFTOnAxis(vRealX);
+  float x1 = extractMag(vRealX, freq1X());
+  float x2 = extractMag(vRealX, freq2X());
+  float x3 = extractMag(vRealX, freq3X());
+  float x4 = extractMag(vRealX, freq4X());
   float x5 = extractMag(vRealX, freq5X());
   
-  runFFTOnAxis(vRealY); 
-  float y1 = extractMag(vRealY, freq1X()); 
-  float y2 = extractMag(vRealY, freq2X()); 
-  float y3 = extractMag(vRealY, freq3X()); 
-  float y4 = extractMag(vRealY, freq4X()); 
+  runFFTOnAxis(vRealY);
+  float y1 = extractMag(vRealY, freq1X());
+  float y2 = extractMag(vRealY, freq2X());
+  float y3 = extractMag(vRealY, freq3X());
+  float y4 = extractMag(vRealY, freq4X());
   float y5 = extractMag(vRealY, freq5X());
   
-  runFFTOnAxis(vRealZ); 
-  float z1 = extractMag(vRealZ, freq1X()); 
-  float z2 = extractMag(vRealZ, freq2X()); 
-  float z3 = extractMag(vRealZ, freq3X()); 
-  float z4 = extractMag(vRealZ, freq4X()); 
+  runFFTOnAxis(vRealZ);
+  float z1 = extractMag(vRealZ, freq1X());
+  float z2 = extractMag(vRealZ, freq2X());
+  float z3 = extractMag(vRealZ, freq3X());
+  float z4 = extractMag(vRealZ, freq4X());
   float z5 = extractMag(vRealZ, freq5X());
 
   live1X_Rad = mapToRadial(x1, y1, z1); 
@@ -244,9 +222,9 @@ void processFFT() {
 }
 
 float quickRMS() {
-  const int N = 50; 
+  const int N = 50;
   const unsigned long dt = 1250;
-  float sx2 = 0, sy2 = 0, sz2 = 0; 
+  float sx2 = 0, sy2 = 0, sz2 = 0;
   float ax, ay, az;
   
   for (int i = 0; i < N; i++) {
@@ -260,51 +238,44 @@ float quickRMS() {
   return max(sqrtf(sx2 / N), max(sqrtf(sy2 / N), sqrtf(sz2 / N)));
 }
 
-// algoritma diagnosa
+// === diagnosa fault ===
+
 float calcUnbalanceScore() { 
   float s = 0.0f; 
   if (live1X_Rad > thAlert1X_Rad) {
-      s += UB_SCORE_BASE * min(1.0f, (live1X_Rad - bl1X_Rad) / (thAlert1X_Rad - bl1X_Rad + 0.01f)); 
+    s += 50.0f * min(1.0f, (live1X_Rad - bl1X_Rad) / (thAlert1X_Rad - bl1X_Rad + 0.01f)); 
   }
-  if (live1X_Rad > live1X_Ax * UB_RAD_AX_RATIO) {
-      s += UB_RAD_AX_ADD; 
+  if (live1X_Rad > live1X_Ax * 1.5f) {
+    s += 30.0f; 
   }
-  if (live2X_Rad < live1X_Rad * UB_2X_RATIO && live3X_Rad < live1X_Rad * UB_3X_RATIO) {
-      s += UB_HARM_ADD; 
+  if (live2X_Rad < live1X_Rad * 0.5f && live3X_Rad < live1X_Rad * 0.3f) {
+    s += 20.0f; 
   }
   return s; 
 }
 
 float calcAngularMisalignScore() { 
   float s = 0.0f; 
-  if (live1X_Ax > thAlert1X_Ax) {
-      s += AM_BASE_ADD; 
-  }
-  if (live1X_Ax > live1X_Rad * AM_AX_RAD_RATIO) {
-      s += AM_AX_RAD_ADD; 
-  }
+  if (live1X_Ax > thAlert1X_Ax) s += 40.0f; 
+  if (live1X_Ax > live1X_Rad * 1.2f) s += 50.0f; 
   return s; 
 }
 
 float calcParallelMisalignScore() { 
   float s = 0.0f; 
-  if (live2X_Rad > thAlert1X_Rad) {
-      s += PM_BASE_ADD; 
-  }
-  if (live2X_Rad > live1X_Rad * PM_2X_RATIO) {
-      s += PM_2X_ADD; 
-  }
+  if (live2X_Rad > thAlert1X_Rad) s += 40.0f; 
+  if (live2X_Rad > live1X_Rad * 1.0f) s += 40.0f; 
   return s; 
 }
 
 float calcLoosenessScore() { 
   float s = 0.0f; 
   if (live1X_Rad > thAlert1X_Rad || live1X_Ax > thAlert1X_Ax) {
-      s += LO_BASE_ADD; 
+    s += 20.0f; 
   }
   float r = live3X_Rad / (live1X_Rad + 0.01f); 
-  if (r > LO_3X_RATIO) {
-      s += LO_MAX_ADD * min(1.0f, r / LO_NORM_RATIO); 
+  if (r > 0.3f) {
+    s += 80.0f * min(1.0f, r / 0.6f); 
   }
   return s; 
 }
@@ -312,7 +283,7 @@ float calcLoosenessScore() {
 Fault diagnose() {
   float stopThreshold = max(blRMS_Rad * 0.20f, 0.03f);
   if (liveRMS_Rad < stopThreshold && liveRMS_Ax < stopThreshold) {
-      return F_MOTOR_STOPPED;
+    return F_MOTOR_STOPPED;
   }
 
   float raw_ub = calcUnbalanceScore(); 
@@ -340,7 +311,7 @@ Fault diagnose() {
   
   uint8_t votes[6] = {0}; 
   for (int i = 0; i < FAULT_HISTORY_SIZE; i++) {
-      votes[faultHistory[i]]++;
+    votes[faultHistory[i]]++;
   }
   
   Fault newConfirmed = confirmedFault; 
@@ -349,27 +320,28 @@ Fault diagnose() {
   
   for (int i = 0; i < 5; i++) { 
     if (i != confirmedFault && votes[i] > maxVotes) { 
-        maxVotes = votes[i]; 
-        challenger = (Fault)i; 
+      maxVotes = votes[i]; 
+      challenger = (Fault)i; 
     } 
   }
   
   if (maxVotes >= VOTES_TO_CONFIRM) {
-      newConfirmed = challenger; 
+    newConfirmed = challenger; 
   } else if (confirmedFault == F_NONE && maxVotes >= 2) {
-      newConfirmed = challenger;
+    newConfirmed = challenger;
   }
   
   confirmedFault = newConfirmed; 
   return confirmedFault;
 }
 
-// main loop rtos core 0
+// === task loop core 0 ===
+
 void TaskFFT_Code(void *pvParameters) {
   esp_task_wdt_add(NULL);
   unsigned long lastDisplayMs = 0;
   unsigned long lastSDSendLocalMs = 0;
-  static bool sdAutoStarted = false;
+  static bool sdAutoStarted = false; // variabel untuk auto start sd
 
   for (;;) {
     esp_task_wdt_reset();
@@ -377,54 +349,71 @@ void TaskFFT_Code(void *pvParameters) {
     unsigned long now = millis();
 
     switch (sysState) {
-      case ST_INIT: 
+      case ST_INIT: { 
         break; 
+      }
       
-      case ST_COLD_RECOVERY: 
-        changeState(ST_RUNNING);
+      case ST_COLD_RECOVERY: {
+        changeState(ST_RUNNING); 
         break;
+      }
       
-      case ST_INPUT_PARAMS: 
+      case ST_INPUT_PARAMS: { 
         vTaskDelay(100 / portTICK_PERIOD_MS); 
         break; 
+      }
       
-      case ST_BOOT_DELAY: 
-        while (!handleAcquisition()) {
-            taskYIELD();
+      case ST_BOOT_DELAY: {
+        startAcquisition(); 
+        while (!acqComplete) { 
+          runAcquisition(); 
+          taskYIELD(); 
         }
+        processFFT(); 
+        isAcquiring = false;
+        
         if (now - stateEnterMs >= BOOT_DELAY_MS) {
-            changeState(ST_STABILIZATION);
+          changeState(ST_STABILIZATION);
         }
         break;
+      }
       
-      case ST_STABILIZATION: 
-        while (!handleAcquisition()) {
-            taskYIELD();
+      case ST_STABILIZATION: {
+        startAcquisition(); 
+        while (!acqComplete) { 
+          runAcquisition(); 
+          taskYIELD(); 
         }
+        processFFT(); 
+        isAcquiring = false;
         
         if (now - lastStabCheckMs >= STAB_CHECK_MS) {
           lastStabCheckMs = now; 
           float tol = stabPrevRMS * STAB_RMS_TOL;
           
           if (fabs(liveRMS_Rad - stabPrevRMS) <= max(tol, 0.01f)) {
-              stabStableCount++; 
+            stabStableCount++; 
           } else {
-              stabStableCount = 0;
+            stabStableCount = 0;
           }
-          
           stabPrevRMS = liveRMS_Rad;
+          
           Serial.printf("[STAB] RMS: %.3f | Stable Count: %d / %d\n", liveRMS_Rad, stabStableCount, STAB_NEED_COUNT);
           
-          if (stabStableCount >= STAB_NEED_COUNT || now - stateEnterMs >= STAB_MAX_MS) {
-              changeState(ST_BASELINE_CAPTURE);
-          }
+          if (stabStableCount >= STAB_NEED_COUNT) changeState(ST_BASELINE_CAPTURE);
+          if (now - stateEnterMs >= STAB_MAX_MS) changeState(ST_BASELINE_CAPTURE);
         } 
         break;
+      }
       
-      case ST_BASELINE_CAPTURE: 
-        while (!handleAcquisition()) {
-            taskYIELD();
+      case ST_BASELINE_CAPTURE: {
+        startAcquisition(); 
+        while (!acqComplete) { 
+          runAcquisition(); 
+          taskYIELD(); 
         }
+        processFFT(); 
+        isAcquiring = false;
         
         if (capIdx < BASELINE_N) {
           capRMS_Rad[capIdx] = liveRMS_Rad; 
@@ -441,21 +430,21 @@ void TaskFFT_Code(void *pvParameters) {
           Serial.printf("[CAPTURE] Progress: %d / %d (RMS R: %.3f, A: %.3f)\n", capIdx, BASELINE_N, liveRMS_Rad, liveRMS_Ax);
         }
         
-        if (capIdx >= BASELINE_N) {
-            changeState(ST_BASELINE_VALIDATE); 
+        if (capIdx >= BASELINE_N) { 
+          changeState(ST_BASELINE_VALIDATE); 
         }
-        
         vTaskDelay(1000 / portTICK_PERIOD_MS);
         break;
+      }
       
       case ST_BASELINE_VALIDATE: {
-        float sdRMS_Rad = stdDev(capRMS_Rad, BASELINE_N);
+        float sdRMS_Rad = stdDev(capRMS_Rad, BASELINE_N); 
         float sdRMS_Ax = stdDev(capRMS_Ax, BASELINE_N);
         float meanRMS_Rad = 0, meanRMS_Ax = 0;
         
         for (int i = 0; i < BASELINE_N; i++) { 
-            meanRMS_Rad += capRMS_Rad[i]; 
-            meanRMS_Ax += capRMS_Ax[i]; 
+          meanRMS_Rad += capRMS_Rad[i]; 
+          meanRMS_Ax += capRMS_Ax[i]; 
         }
         meanRMS_Rad /= BASELINE_N; 
         meanRMS_Ax /= BASELINE_N;
@@ -463,16 +452,15 @@ void TaskFFT_Code(void *pvParameters) {
         bool rmsOk = (sdRMS_Rad / (meanRMS_Rad + 0.001f)) < STD_DEV_RATIO_MAX_RMS && (sdRMS_Ax / (meanRMS_Ax + 0.001f)) < STD_DEV_RATIO_MAX_RMS;
         bool specOk = true; 
         
-        float sd1X_Rad = stdDev(cap1X_Rad, BASELINE_N);
+        float sd1X_Rad = stdDev(cap1X_Rad, BASELINE_N); 
         float sd2X_Rad = stdDev(cap2X_Rad, BASELINE_N);
-        float mean1X_Rad = 0, mean2X_Rad = 0, mean3X_Rad = 0;
+        float mean1X_Rad = 0, mean2X_Rad = 0, mean3X_Rad = 0; 
         float mean1X_Ax = 0, mean2X_Ax = 0, mean3X_Ax = 0;
         
         for (int i = 0; i < BASELINE_N; i++) { 
           mean1X_Rad += cap1X_Rad[i]; 
           mean2X_Rad += cap2X_Rad[i]; 
           mean3X_Rad += cap3X_Rad[i]; 
-          
           mean1X_Ax += cap1X_Ax[i]; 
           mean2X_Ax += cap2X_Ax[i]; 
           mean3X_Ax += cap3X_Ax[i]; 
@@ -480,17 +468,12 @@ void TaskFFT_Code(void *pvParameters) {
         mean1X_Rad /= BASELINE_N; 
         mean2X_Rad /= BASELINE_N; 
         mean3X_Rad /= BASELINE_N; 
-        
         mean1X_Ax /= BASELINE_N; 
         mean2X_Ax /= BASELINE_N; 
         mean3X_Ax /= BASELINE_N;
         
-        if (sd1X_Rad / (mean1X_Rad + 0.001f) > STD_DEV_RATIO_MAX_SPEC) {
-            specOk = false;
-        }
-        if (sd2X_Rad / (mean2X_Rad + 0.001f) > STD_DEV_RATIO_MAX_SPEC) {
-            specOk = false;
-        }
+        if (sd1X_Rad / (mean1X_Rad + 0.001f) > STD_DEV_RATIO_MAX_SPEC) specOk = false;
+        if (sd2X_Rad / (mean2X_Rad + 0.001f) > STD_DEV_RATIO_MAX_SPEC) specOk = false;
         
         if (rmsOk && specOk) {
           blRMS_Rad = meanRMS_Rad; 
@@ -515,9 +498,17 @@ void TaskFFT_Code(void *pvParameters) {
         break;
       }
       
-      case ST_RUNNING: 
-        if (handleAcquisition()) {
+      case ST_RUNNING: {
+        if (!isAcquiring) startAcquisition();
+        if (isAcquiring && !acqComplete) { 
+          runAcquisition(); 
+          taskYIELD(); 
+        } 
+        
+        if (acqComplete) {
+          processFFT(); 
           diagnose(); 
+          isAcquiring = false;
           
           bool alertRad = (liveRMS_Rad > thAlertRMS_Rad || live1X_Rad > thAlert1X_Rad || live2X_Rad > thAlert2X_Rad || live3X_Rad > thAlert3X_Rad);
           bool dangerRad = (liveRMS_Rad > thDangerRMS_Rad || live1X_Rad > thDanger1X_Rad || live2X_Rad > thDanger2X_Rad || live3X_Rad > thDanger3X_Rad);
@@ -525,31 +516,41 @@ void TaskFFT_Code(void *pvParameters) {
           bool dangerAx = (liveRMS_Ax > thDangerRMS_Ax || live1X_Ax > thDanger1X_Ax || live2X_Ax > thDanger2X_Ax || live3X_Ax > thDanger3X_Ax);
           
           if (dangerRad || dangerAx) {
-              changeState(ST_DANGER); 
+            changeState(ST_DANGER); 
           } else if (alertRad || alertAx) {
-              changeState(ST_ALERT);
+            changeState(ST_ALERT);
           }
           
           float stopTh = max(blRMS_Rad * MOTOR_STOP_RATIO, MOTOR_STOP_FLOOR);
           if (liveRMS_Rad < stopTh && liveRMS_Ax < stopTh && (now - runningEnterMs > RUN_UP_IGNORE_MS)) {
-              changeState(ST_STANDBY);
+            changeState(ST_STANDBY);
           }
+          startAcquisition();
         } 
         break;
+      }
       
       case ST_STANDBY: {
         float rms = quickRMS(); 
         float stopTh = max(blRMS_Rad * MOTOR_STOP_RATIO, MOTOR_STOP_FLOOR);
         if (rms > stopTh * 2.0f) {
-            changeState(ST_RUNNING);
+          changeState(ST_RUNNING);
         }
         vTaskDelay(200 / portTICK_PERIOD_MS); 
         break;
       }
       
-      case ST_ALERT: 
-        if (handleAcquisition()) {
+      case ST_ALERT: {
+        if (!isAcquiring) startAcquisition();
+        if (isAcquiring && !acqComplete) { 
+          runAcquisition(); 
+          taskYIELD(); 
+        } 
+        
+        if (acqComplete) {
+          processFFT(); 
           diagnose(); 
+          isAcquiring = false;
           
           bool dangerRad = (liveRMS_Rad > thDangerRMS_Rad || live1X_Rad > thDanger1X_Rad); 
           bool dangerAx = (liveRMS_Ax > thDangerRMS_Ax || live1X_Ax > thDanger1X_Ax);
@@ -557,23 +558,33 @@ void TaskFFT_Code(void *pvParameters) {
           bool alertAx = (liveRMS_Ax > thAlertRMS_Ax || live1X_Ax > thAlert1X_Ax);
           
           if (dangerRad || dangerAx) {
-              changeState(ST_DANGER); 
+            changeState(ST_DANGER); 
           } else if (!alertRad && !alertAx) { 
-              changeState(ST_RUNNING); 
-              triggerAlert(AT_BACK_TO_NORMAL); 
+            changeState(ST_RUNNING); 
+            triggerAlert(AT_BACK_TO_NORMAL); 
           }
           
           float stopTh = max(blRMS_Rad * MOTOR_STOP_RATIO, MOTOR_STOP_FLOOR);
           if (liveRMS_Rad < stopTh && liveRMS_Ax < stopTh) { 
-              changeState(ST_STANDBY); 
-              triggerAlert(AT_MOTOR_STOPPED); 
+            changeState(ST_STANDBY); 
+            triggerAlert(AT_MOTOR_STOPPED); 
           }
+          startAcquisition();
         } 
         break;
+      }
       
-      case ST_DANGER: 
-        if (handleAcquisition()) {
+      case ST_DANGER: {
+        if (!isAcquiring) startAcquisition();
+        if (isAcquiring && !acqComplete) { 
+          runAcquisition(); 
+          taskYIELD(); 
+        } 
+        
+        if (acqComplete) {
+          processFFT(); 
           diagnose(); 
+          isAcquiring = false;
           
           bool dangerRad = (liveRMS_Rad > thDangerRMS_Rad || live1X_Rad > thDanger1X_Rad); 
           bool dangerAx = (liveRMS_Ax > thDangerRMS_Ax || live1X_Ax > thDanger1X_Ax);
@@ -582,20 +593,22 @@ void TaskFFT_Code(void *pvParameters) {
           
           if (!dangerRad && !dangerAx) { 
             if (alertRad || alertAx) {
-                changeState(ST_ALERT); 
+              changeState(ST_ALERT); 
             } else { 
-                changeState(ST_RUNNING); 
-                triggerAlert(AT_BACK_TO_NORMAL); 
+              changeState(ST_RUNNING); 
+              triggerAlert(AT_BACK_TO_NORMAL); 
             } 
           }
           
           float stopTh = max(blRMS_Rad * MOTOR_STOP_RATIO, MOTOR_STOP_FLOOR);
           if (liveRMS_Rad < stopTh && liveRMS_Ax < stopTh) { 
-              changeState(ST_STANDBY); 
-              triggerAlert(AT_MOTOR_STOPPED); 
+            changeState(ST_STANDBY); 
+            triggerAlert(AT_MOTOR_STOPPED); 
           }
+          startAcquisition();
         } 
         break;
+      }
     }
 
     if (now - lastDisplayMs >= 50) { 
@@ -603,21 +616,24 @@ void TaskFFT_Code(void *pvParameters) {
       requestDisplayLive(); 
     }
 
+    // auto-start sd logging saat st_running
     if (sysState == ST_RUNNING && sdPresent && sdAutoLog && !sdAutoStarted) {
       sendSDCommand(SD_CMD_START_LOG);
-      isSdLoggingExpected = true; 
+      isSdLoggingExpected = true;
       sdAutoStarted = true;
-      Serial.println(F("[SYS] Auto-Start SD Logging..."));
+      Serial.println(F("[SYSTEM] Auto-Start SD Logging..."));
     }
     
     if (sysState != ST_RUNNING) {
-        sdAutoStarted = false; 
+      sdAutoStarted = false; // reset flag jika keluar dari running
     }
 
     if (isSdLoggingExpected && sdAutoLog && (sysState >= ST_RUNNING) && (now - lastSDSendLocalMs >= sdLogIntervalMs)) { 
       lastSDSendLocalMs = now; 
       sendSDData(); 
     }
+    
+    if (matlabMode && acqComplete) { }
     
     vTaskDelay(1);
   }

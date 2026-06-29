@@ -1,3 +1,4 @@
+//ui_task.ino
 #include "globals.h"
 
 // === tombol (debounce & long press) ===
@@ -110,8 +111,8 @@ void handleMenuParamsUI(BtnEvent btn, UIScreen &scr, int8_t &cur, NavMode &nav, 
         scr = SCREEN_LIVE; 
       }
     }
-  } else { 
-    if (cur == 0) { // mode edit rpm
+  } else { // mode edit
+    if (cur == 0) { // rpm
       if (btn == BTN_UP) editVal += 100;
       if (btn == BTN_DOWN) editVal = max(0.0f, editVal - 100);
       
@@ -119,7 +120,7 @@ void handleMenuParamsUI(BtnEvent btn, UIScreen &scr, int8_t &cur, NavMode &nav, 
         sendUICmd(UI_CMD_SET_PARAMS, editVal, p.isoClass); 
         nav = NAV_BROWSE; 
       }
-    } else if (cur == 1) { // mode edit iso
+    } else if (cur == 1) { // iso
       if (btn == BTN_UP) editVal = min(4.0f, editVal + 1);
       if (btn == BTN_DOWN) editVal = max(1.0f, editVal - 1);
       
@@ -132,7 +133,7 @@ void handleMenuParamsUI(BtnEvent btn, UIScreen &scr, int8_t &cur, NavMode &nav, 
 }
 
 void handleMenuRuntimeUI(BtnEvent btn, UIScreen &scr, int8_t &cur, NavMode &nav, DisplayPacket &p) {
-  const int ITEMS = 8; 
+  const int ITEMS = 8; // <- Ubah dari 7 ke 8
   if (btn == BTN_UP) cur = (cur - 1 + ITEMS) % ITEMS;
   if (btn == BTN_DOWN) cur = (cur + 1) % ITEMS;
   
@@ -141,7 +142,7 @@ void handleMenuRuntimeUI(BtnEvent btn, UIScreen &scr, int8_t &cur, NavMode &nav,
       case 0: scr = SCREEN_MENU_NETWORK; cur = 0; break; 
       case 1: sendUICmd(UI_CMD_REBASELINE); scr = SCREEN_LIVE; break;
       case 2: sendUICmd(UI_CMD_TOGGLE_AXIS_MAP); break; 
-      case 3: sendUICmd(UI_CMD_TOGGLE_THEME); break; 
+      case 3: sendUICmd(UI_CMD_TOGGLE_THEME); break; // <- TAMBAH INI
       case 4: sendUICmd(UI_CMD_TOGGLE_MATLAB); break;    
       case 5: scr = SCREEN_MENU_SD; cur = 0; break;     
       case 6: sendUICmd(UI_CMD_RESET_EEPROM); break;
@@ -210,13 +211,13 @@ void TaskUI_Code(void *pvParameters) {
     lcdNeedsReinit = false;
   }
   
-  tft.fillScreen(currentTheme == 0 ? HMI_BG_DARK : HMI_BG_LIGHT);
+  tft.fillScreen(currentTheme == 0 ? HMI_BG_DARK : LT_BG_MAIN);
 
   sprMenu.createSprite(460, 30);
   sprMenu.setTextFont(2);
 
   UIScreen prevScreen = (UIScreen)99; 
-  uint8_t prevTheme = 99; 
+  uint8_t prevTheme = 99;
   NavMode navMode = NAV_BROWSE;
   int8_t menuCursor = 0;
   float editValue = 0;
@@ -228,14 +229,14 @@ void TaskUI_Code(void *pvParameters) {
   unsigned long lastRenderMs = 0;
 
   for (;;) {
-    // 1. Cek data baru dari FFT
+    // 1. cek data baru dari fft
     if (xDisplayQueue != NULL && xQueueReceive(xDisplayQueue, &p, 0) == pdPASS) {
       if (currentScreen == SCREEN_LIVE) {
         needsRedraw = true;
       }
     }
 
-    // 2. Cek tombol
+    // 2. cek tombol
     BtnEvent btn = pollButtons();
 
     if (btn != BTN_NONE) {
@@ -243,9 +244,7 @@ void TaskUI_Code(void *pvParameters) {
       
       if (currentScreen == SCREEN_LIVE) {
         if (btn == BTN_SELECT) {
-          currentScreen = (p.sysState == ST_INPUT_PARAMS || p.sysState == ST_COLD_RECOVERY) 
-                          ? SCREEN_MENU_PARAMS 
-                          : SCREEN_MENU_RUNTIME;
+          currentScreen = (p.sysState == ST_INPUT_PARAMS || p.sysState == ST_COLD_RECOVERY) ? SCREEN_MENU_PARAMS : SCREEN_MENU_RUNTIME;
           menuCursor = 0; 
           navMode = NAV_BROWSE;
         }
@@ -265,20 +264,19 @@ void TaskUI_Code(void *pvParameters) {
       }
     }
 
-    // 3. Live screen render 100ms
+    // 3. live screen render 100ms
     if (currentScreen == SCREEN_LIVE && millis() - lastRenderMs >= 100) {
       needsRedraw = true;
       lastRenderMs = millis();
     }
 
-    // 4. Cek perubahan tema
     if (prevTheme != currentTheme) {
       prevScreen = (UIScreen)99; 
       needsRedraw = true;
       prevTheme = currentTheme;
     }
 
-    // 5. Render execution (Logika sudah simpel)
+    // 5. render execution
     if (needsRedraw) {
       needsRedraw = false;
       
@@ -286,22 +284,41 @@ void TaskUI_Code(void *pvParameters) {
         digitalWrite(SD_CS, HIGH);
         tft.startWrite();
         
-        // Render Static Background
         if (prevScreen != currentScreen) {
-          if (currentScreen == SCREEN_LIVE) drawStaticLiveBg();
-          else if (currentScreen == SCREEN_MENU_PARAMS) drawStaticMenuBg("SET PARAMETER");
-          else if (currentScreen == SCREEN_MENU_RUNTIME) drawStaticMenuBg("RUNTIME MENU");
-          else if (currentScreen == SCREEN_MENU_SD) drawStaticMenuBg("SD CARD SETTINGS");
-          else if (currentScreen == SCREEN_MENU_NETWORK) drawStaticMenuBg("NETWORK & TIME");
+          if (currentScreen == SCREEN_LIVE) {
+            if (currentTheme == 0) drawStaticLiveBg(); else drawStaticLiveBgLight();
+          }
+          else if (currentScreen == SCREEN_MENU_PARAMS) {
+            if (currentTheme == 0) drawStaticMenuBg("SET PARAMETER"); else drawStaticMenuBgLight("SET PARAMETER");
+          }
+          else if (currentScreen == SCREEN_MENU_RUNTIME) {
+            if (currentTheme == 0) drawStaticMenuBg("RUNTIME MENU"); else drawStaticMenuBgLight("RUNTIME MENU");
+          }
+          else if (currentScreen == SCREEN_MENU_SD) {
+            if (currentTheme == 0) drawStaticMenuBg("SD CARD SETTINGS"); else drawStaticMenuBgLight("SD CARD SETTINGS");
+          }
+          else if (currentScreen == SCREEN_MENU_NETWORK) {
+            if (currentTheme == 0) drawStaticMenuBg("NETWORK & TIME"); else drawStaticMenuBgLight("NETWORK & TIME");
+          }
           prevScreen = currentScreen;
         }
 
-        // Render Dynamic Content
-        if (currentScreen == SCREEN_LIVE) updateLiveDynamic(p);
-        else if (currentScreen == SCREEN_MENU_PARAMS) renderScreenParams(menuCursor, navMode, editValue, p);
-        else if (currentScreen == SCREEN_MENU_RUNTIME) renderScreenRuntime(menuCursor, p);
-        else if (currentScreen == SCREEN_MENU_SD) renderScreenSD(menuCursor, navMode, editValue, p);
-        else if (currentScreen == SCREEN_MENU_NETWORK) renderScreenNetwork(menuCursor, p);
+        // Dinamis
+        if (currentScreen == SCREEN_LIVE) {
+          if (currentTheme == 0) updateLiveDynamic(p); else updateLiveDynamicLight(p);
+        }
+        else if (currentScreen == SCREEN_MENU_PARAMS) {
+          renderScreenParams(menuCursor, navMode, editValue, p);
+        }
+        else if (currentScreen == SCREEN_MENU_RUNTIME) {
+          renderScreenRuntime(menuCursor, p);
+        }
+        else if (currentScreen == SCREEN_MENU_SD) {
+          renderScreenSD(menuCursor, navMode, editValue, p);
+        }
+        else if (currentScreen == SCREEN_MENU_NETWORK) {
+          renderScreenNetwork(menuCursor, p);
+        }
         
         tft.endWrite();
         xSemaphoreGive(xSPIMutex);
@@ -312,4 +329,4 @@ void TaskUI_Code(void *pvParameters) {
 
     vTaskDelay(1 / portTICK_PERIOD_MS); 
   }
-}y
+}

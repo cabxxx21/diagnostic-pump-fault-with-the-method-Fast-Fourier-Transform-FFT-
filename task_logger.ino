@@ -325,7 +325,7 @@ void TaskLogger_Code(void *pvParameters) {
       }
     }
 
-    // TG
+    // === telegram alerts ===
     
     if (xAlertQueue != NULL) {
       AlertPacket alPkt;
@@ -369,7 +369,7 @@ void TaskLogger_Code(void *pvParameters) {
       }
     }
 
-    // send to main 
+    // === kirim status ke main setiap 1 detik ===
     if (now - lastStatusSendMs >= 1000) {
       lastStatusSendMs = now;
       
