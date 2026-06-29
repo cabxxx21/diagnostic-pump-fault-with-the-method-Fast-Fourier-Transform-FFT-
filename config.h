@@ -27,8 +27,8 @@ TFT_eSprite spr = TFT_eSprite(&tft);
 TFT_eSprite sprMenu = TFT_eSprite(&tft);
 
 // wifi, ntp & telegram
-const char *WIFI_SSID = "Kos Arfad putra muslim 3 tengah";
-const char *WIFI_PASS = "BismillahAlhamdulillah3t";
+const char *WIFI_SSID = "@@**@@**";
+const char *WIFI_PASS = "****";
 const long GMT_OFFSET_SEC = 7 * 3600;
 const int DAYLIGHT_OFFSET_SEC = 0;
 
@@ -59,7 +59,7 @@ const int DAYLIGHT_OFFSET_SEC = 0;
 
 // warna hmi light theme
 #define HMI_BG_LIGHT     TFT_WHITE
-#define HMI_BG_CARD_L    0xE71C // abu-abu terang banget (contoh hex)
+#define HMI_BG_CARD_L    0xE71C
 #define HMI_TEXT_DARK    TFT_BLACK
 
 // pin sensor & sd card
@@ -94,8 +94,8 @@ const int DAYLIGHT_OFFSET_SEC = 0;
 #define TG_HTTP_TIMEOUT_MS    10000
 #define ALERT_COOLDOWN_MS     300000
 
-#define TELEGRAM_BOT_TOKEN    "8605474806:AAF8x9JnDyjVXF58xeBYXIkS8aKboSyB6Ww"
-#define TELEGRAM_CHAT_ID      "-1003986831663"
+#define TELEGRAM_BOT_TOKEN    "*******"
+#define TELEGRAM_CHAT_ID      "*******"
 
 // parameter sistem & eeprom
 #define BOOT_DELAY_MS         8000UL
@@ -114,8 +114,8 @@ const int DAYLIGHT_OFFSET_SEC = 0;
 #define RUN_UP_IGNORE_MS       10000UL
 #define STAB_RMS_TOL           0.05f
 #define STAB_NEED_COUNT        3
-#define STD_DEV_RATIO_MAX_RMS  0.50f //asli0.10
-#define STD_DEV_RATIO_MAX_SPEC 0.50f //asli0.10/0.20
+#define STD_DEV_RATIO_MAX_RMS  0.10f 
+#define STD_DEV_RATIO_MAX_SPEC 0.20f 
 #define NOISE_FLOOR            0.10f
 
 // motor stop & smoothing
