@@ -48,8 +48,8 @@ const int DAYLIGHT_OFFSET_SEC = 0;
 
 // warna ui dark
 #define HMI_BG_DARK     TFT_BLACK
-#define HMI_BG_CARD     0x18E3 // abu-abu gelap
-#define HMI_BORDER      0x3186 // abu-abu border
+#define HMI_BG_CARD     0x18E3
+#define HMI_BORDER      0x3186
 #define HMI_CYAN        TFT_CYAN
 #define HMI_GREEN       TFT_GREEN
 #define HMI_YELLOW      TFT_YELLOW
@@ -62,13 +62,13 @@ const int DAYLIGHT_OFFSET_SEC = 0;
 #define HMI_BG_LIGHT     TFT_WHITE
 #define HMI_BG_CARD_L    0xE71C 
 #define HMI_TEXT_DARK    TFT_BLACK
-#define LT_BG_MAIN       0xF7BE // Krem sangat terang
-#define LT_BG_CARD       0xFFFF // Putih bersih
-#define LT_BORDER        0xC618 // Abu-abu lembut
-#define LT_ACCENT_ORG    0xFC00 // Oranye cerah 
-#define LT_ACCENT_BLU    0x2B5C // Biru dongker 
-#define LT_TEXT_MAIN     0x18E3 // Hitam keabu-abuan
-#define LT_TEXT_DIM      0x9492 // Abu-abu redup
+#define LT_BG_MAIN       0xF7BE
+#define LT_BG_CARD       0xFFFF
+#define LT_BORDER        0xC618
+#define LT_ACCENT_ORG    0xFC00
+#define LT_ACCENT_BLU    0x2B5C
+#define LT_TEXT_MAIN     0x18E3
+#define LT_TEXT_DIM      0x9492
 
 // pin sensor & sd card
 #define ADXL_SCK        6  
